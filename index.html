@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Earth Information Jukebox</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #09090b; /* Deep dark space */
+            color: #ffffff;
+            overflow: hidden;
+        }
+
+        /* Glowing Visualizer Box */
+        .visual-box {
+            background: radial-gradient(circle at center, #1a1a24 0%, #09090b 100%);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
+            border: 2px solid #27272a;
+        }
+
+        @keyframes neon-pulse {
+            0% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.2), inset 0 0 10px rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.6), inset 0 0 20px rgba(34, 197, 94, 0.3); border-color: rgba(34, 197, 94, 1); }
+            100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.2), inset 0 0 10px rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.5); }
+        }
+
+        .is-playing {
+            animation: neon-pulse 1.5s infinite alternate ease-in-out;
+        }
+
+        /* Sidebar active state */
+        .track-btn { transition: all 0.2s; border-left: 4px solid transparent; }
+        .track-btn:hover { background-color: #18181b; }
+        .active-track { background-color: #18181b; border-left-color: #22c55e; } /* Neon Green */
+        .active-local { background-color: #18181b; border-left-color: #3b82f6; } /* Neon Blue for local */
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex h-screen w-full flex-col md:flex-row">
+
+    <!-- Sidebar -->
+    <aside class="w-full md:w-80 bg-black flex flex-col h-1/3 md:h-full border-r border-gray-800 z-20 shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                🎵 Earth Jukebox
+            </h1>
+            <p class="text-xs text-gray-400 mt-1 uppercase tracking-widest">Listen to the Data</p>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 space-y-2">
+            <h2 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 ml-2">Global Tracks</h2>
+            
+            <button onclick="changeTrack('earth', this)" class="track-btn active-track w-full text-left px-4 py-3 rounded-r-lg flex items-center gap-3">
+                <span class="text-2xl">🌍</span>
+                <div>
+                    <div class="font-semibold text-white">Earth Overview</div>
+                    <div class="text-xs text-gray-400">Our Blue Marble</div>
+                </div>
+            </button>
+
+            <button onclick="changeTrack('climate', this)" class="track-btn w-full text-left px-4 py-3 rounded-r-lg flex items-center gap-3">
+                <span class="text-2xl">🌡️</span>
+                <div>
+                    <div class="font-semibold text-white">Climate Change</div>
+                    <div class="text-xs text-gray-400">Rising Temperatures</div>
+                </div>
+            </button>
+
+            <button onclick="changeTrack('forest', this)" class="track-btn w-full text-left px-4 py-3 rounded-r-lg flex items-center gap-3">
+                <span class="text-2xl">🌳</span>
+                <div>
+                    <div class="font-semibold text-white">Forests</div>
+                    <div class="text-xs text-gray-400">Deforestation Data</div>
+                </div>
+            </button>
+
+            <button onclick="changeTrack('ocean', this)" class="track-btn w-full text-left px-4 py-3 rounded-r-lg flex items-center gap-3">
+                <span class="text-2xl">🌊</span>
+                <div>
+                    <div class="font-semibold text-white">Oceans</div>
+                    <div class="text-xs text-gray-400">Rising Sea Levels</div>
+                </div>
+            </button>
+
+            <button onclick="changeTrack('disasters', this)" class="track-btn w-full text-left px-4 py-3 rounded-r-lg flex items-center gap-3">
+                <span class="text-2xl">🌪️</span>
+                <div>
+                    <div class="font-semibold text-white">Disasters</div>
+                    <div class="text-xs text-gray-400">Extreme Weather</div>
+                </div>
+            </button>
+
+            <div class="mt-8 mb-2 ml-2 flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                <h2 class="text-xs font-bold text-blue-500 uppercase tracking-widest">Local Edition</h2>
+            </div>
+            
+            <button onclick="changeTrack('nagpur', this)" class="track-btn border-l-4 border-transparent hover:border-blue-500/50 w-full text-left px-4 py-3 rounded-r-lg flex items-center gap-3 bg-blue-900/10">
+                <span class="text-2xl">📍</span>
+                <div>
+                    <div class="font-bold text-blue-400">Nagpur Data</div>
+                    <div class="text-xs text-gray-400">Urban Expansion</div>
+                </div>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative bg-[#09090b]">
+        
+        <!-- Header Controls -->
+        <header class="p-6 flex justify-end absolute top-0 w-full z-10">
+            <div class="bg-black/50 backdrop-blur border border-gray-800 rounded-full p-1 flex gap-1">
+                <button onclick="changeLang('en', this)" class="lang-btn bg-gray-800 text-white px-4 py-1.5 rounded-full text-sm font-semibold transition">EN</button>
+                <button onclick="changeLang('hi', this)" class="lang-btn hover:bg-gray-800 text-gray-400 px-4 py-1.5 rounded-full text-sm font-semibold transition">हिंदी</button>
+                <button onclick="changeLang('mr', this)" class="lang-btn hover:bg-gray-800 text-gray-400 px-4 py-1.5 rounded-full text-sm font-semibold transition">मराठी</button>
+            </div>
+        </header>
+
+        <!-- Center Player -->
+        <div class="flex-1 flex flex-col items-center justify-center p-8 mt-12 md:mt-0">
+            
+            <h2 id="uiTitle" class="text-4xl md:text-5xl font-bold text-white mb-2 text-center">🌍 Earth Overview</h2>
+            <p id="uiSub" class="text-gray-400 uppercase tracking-widest text-sm mb-10 text-center">Satellite Time-Lapse Ready</p>
+
+            <!-- Visualizer Box -->
+            <div id="visualBox" class="visual-box w-full max-w-2xl aspect-video rounded-2xl flex flex-col items-center justify-center mb-10 relative">
+                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CjxwYXRoIGQ9Ik0wIDBoNDB2NDBIMHoiIGZpbGw9Im5vbmUiLz4KPHBhdGggZD0iTTAgMGg0MHYxdi0xem0wIDM5aDQwdjFWMzl6bTM5IDBWMGgxdjQwaC0xek0wIDBWMGgxdjQwaC0xeiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPgo8L3N2Zz4=')] opacity-20"></div>
+                
+                <span id="uiIcon" class="text-6xl mb-4 z-10 filter drop-shadow-lg">🛰️</span>
+                <p id="uiVisualText" class="text-green-400 font-mono text-sm tracking-widest z-10 text-center uppercase px-4 bg-black/60 py-1 rounded">
+                    PRESS PLAY TO START VISUALS & AUDIO
+                </p>
+            </div>
+
+            <!-- Big Play Button -->
+            <button id="playBtn" onclick="togglePlay()" class="bg-green-500 hover:bg-green-400 text-black px-12 py-4 rounded-full font-bold text-xl transition-all hover:scale-105 flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(34,197,94,0.4)] mb-8">
+                <span id="playIcon">▶</span> <span id="playText">PLAY TRACK</span>
+            </button>
+
+            <!-- Lyrics/Data box -->
+            <div class="w-full max-w-2xl bg-gray-900/80 border border-gray-800 rounded-xl p-6 text-center shadow-lg relative">
+                <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gray-800 px-3 py-0.5 text-xs font-bold text-gray-400 uppercase tracking-wider rounded-full border border-gray-700">Data Insights</div>
+                <p id="uiLyrics" class="text-lg md:text-xl text-gray-200 leading-relaxed font-medium">
+                    "Our Earth is 71% water. It is a beautiful blue marble from space, but it is changing rapidly."
+                </p>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Data Dictionary with highly reliable Google Assistant Sound URLs
+        const db = {
+            "earth": {
+                icon: "🌍",
+                audioUrl: "https://actions.google.com/sounds/v1/science_fiction/space_room_hum.ogg",
+                en: { title: "🌍 Earth Overview", lyrics: "\"Our Earth is 71% water. It is a beautiful blue marble from space, but it is changing rapidly.\"" },
+                hi: { title: "🌍 पृथ्वी अवलोकन", lyrics: "\"हमारी पृथ्वी 71% पानी है। अंतरिक्ष से यह एक नीले संगमरमर की तरह दिखती है, लेकिन यह तेजी से बदल रही है।\"" },
+                mr: { title: "🌍 पृथ्वी विहंगावलोकन", lyrics: "\"आपली पृथ्वी 71% पाण्याने व्यापलेली आहे. अंतराळातून ती एका निळ्या गोलासारखी दिसते, पण ती वेगाने बदलत आहे.\"" }
+            },
+            "climate": {
+                icon: "🌡️",
+                audioUrl: "https://actions.google.com/sounds/v1/science_fiction/ambience_outer_space.ogg",
+                en: { title: "🌡️ Climate Change", lyrics: "\"Global average temperatures have risen by 1.2°C in the last decade, causing severe heatwaves.\"" },
+                hi: { title: "🌡️ जलवायु परिवर्तन", lyrics: "\"पिछले दशक में वैश्विक औसत तापमान में 1.2°C की वृद्धि हुई है, जिससे भयंकर गर्मी बढ़ रही है।\"" },
+                mr: { title: "🌡️ हवामान बदल", lyrics: "\"गेल्या दशकात जागतिक सरासरी तापमानात 1.2°C वाढ झाली आहे, ज्यामुळे उष्णतेच्या लाटा वाढल्या आहेत.\"" }
+            },
+            "forest": {
+                icon: "🌳",
+                audioUrl: "https://actions.google.com/sounds/v1/nature/forest_ambience.ogg",
+                en: { title: "🌳 Forests", lyrics: "\"Every minute, an area of forest the size of 20 football fields is cut down globally.\"" },
+                hi: { title: "🌳 जंगल", lyrics: "\"हर मिनट, विश्व स्तर पर 20 फुटबॉल मैदानों के आकार का जंगल काटा जाता है।\"" },
+                mr: { title: "🌳 जंगल", lyrics: "\"दर मिनिटाला, जागतिक स्तरावर 20 फुटबॉल मैदानाच्या आकाराचे जंगल तोडले जाते.\"" }
+            },
+            "ocean": {
+                icon: "🌊",
+                audioUrl: "https://actions.google.com/sounds/v1/water/waves_crashing_on_rock_beach.ogg",
+                en: { title: "🌊 Oceans", lyrics: "\"Sea levels are rising at a dangerous rate of 3.4 millimeters per year due to melting ice caps.\"" },
+                hi: { title: "🌊 महासागर", lyrics: "\"बर्फ पिघलने के कारण समुद्र का जल स्तर 3.4 मिलीमीटर प्रति वर्ष की खतरनाक दर से बढ़ रहा है।\"" },
+                mr: { title: "🌊 महासागर", lyrics: "\"बर्फ वितळल्यामुळे समुद्राची पातळी दरवर्षी 3.4 मिलीमीटर या धोकादायक वेगाने वाढत आहे.\"" }
+            },
+            "disasters": {
+                icon: "🌪️",
+                audioUrl: "https://actions.google.com/sounds/v1/weather/thunderstorm.ogg",
+                en: { title: "🌪️ Natural Disasters", lyrics: "\"Extreme weather events like cyclones and floods have increased by 50% in the last 20 years.\"" },
+                hi: { title: "🌪️ प्राकृतिक आपदाएं", lyrics: "\"पिछले 20 वर्षों में चक्रवात और बाढ़ जैसी चरम मौसम की घटनाओं में 50% की वृद्धि हुई है।\"" },
+                mr: { title: "🌪️ नैसर्गिक आपत्ती", lyrics: "\"गेल्या 20 वर्षांत चक्रीवादळ आणि पुरासारख्या अत्यंत हवामानाच्या घटनांमध्ये 50% वाढ झाली आहे.\"" }
+            },
+            "nagpur": {
+                icon: "📍",
+                audioUrl: "https://actions.google.com/sounds/v1/ambiences/city_street_traffic.ogg",
+                en: { title: "📍 Nagpur Data", lyrics: "\"Due to rapid urban expansion, Nagpur's local green cover has reduced by 15% in the last 10 years.\"" },
+                hi: { title: "📍 नागपुर डेटा", lyrics: "\"तेजी से शहरी विस्तार के कारण, पिछले 10 वर्षों में नागपुर की हरियाली में 15% की कमी आई है।\"" },
+                mr: { title: "📍 नागपूर डेटा", lyrics: "\"वेगाने होत असलेल्या शहरी विस्तारामुळे, गेल्या 10 वर्षांत नागपूरची हिरवळ 15% कमी झाली आहे.\"" }
+            }
+        };
+
+        // State
+        let currentTrack = 'earth';
+        let currentLang = 'en';
+        let isPlaying = false;
+        let audioCtx = null;
+        let synthOscillator = null;
+        let synthGain = null;
+
+        function setPlayState(playing) {
+            isPlaying = playing;
+            const playBtn = document.getElementById('playBtn');
+            const playIcon = document.getElementById('playIcon');
+            const playText = document.getElementById('playText');
+            const visualBox = document.getElementById('visualBox');
+            const visualText = document.getElementById('uiVisualText');
+
+            if(isPlaying) {
+                playIcon.innerText = "⏸";
+                playText.innerText = "PAUSE AUDIO";
+                playBtn.classList.replace('bg-green-500', 'bg-red-500');
+                playBtn.classList.replace('hover:bg-green-400', 'hover:bg-red-400');
+                playBtn.style.boxShadow = "0 0 20px rgba(239, 68, 68, 0.4)";
+                visualBox.classList.add('is-playing');
+                visualText.innerText = `[ PLAYING ${currentTrack.toUpperCase()} SOUNDSCAPE & VISUALS ]`;
+            } else {
+                playIcon.innerText = "▶";
+                playText.innerText = "PLAY TRACK";
+                playBtn.classList.replace('bg-red-500', 'bg-green-500');
+                playBtn.classList.replace('hover:bg-red-400', 'hover:bg-green-400');
+                playBtn.style.boxShadow = "0 0 20px rgba(34, 197, 94, 0.4)";
+                visualBox.classList.remove('is-playing');
+                visualText.innerText = "PRESS PLAY TO START VISUALS & AUDIO";
+            }
+        }
+
+        function togglePlay() {
+            if(isPlaying) {
+                stopAudio();
+                setPlayState(false);
+            } else {
+                setPlayState(true);
+                playAudioEngine();
+            }
+        }
+
+        function playAudioEngine() {
+            // 1. Play Procedural Ambient Sound (100% cross-browser, no external files to load/fail)
+            if(!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            
+            synthOscillator = audioCtx.createOscillator();
+            synthGain = audioCtx.createGain();
+            
+            // Set cinematic vibe based on track (Dynamic Soundscape)
+            if(currentTrack === 'earth' || currentTrack === 'ocean') {
+                synthOscillator.type = 'sine';
+                synthOscillator.frequency.value = 55; // Deep space/water rumble
+            } else if (currentTrack === 'climate' || currentTrack === 'disasters') {
+                synthOscillator.type = 'sawtooth';
+                synthOscillator.frequency.value = 45; // Tense low rumble
+            } else {
+                synthOscillator.type = 'triangle';
+                synthOscillator.frequency.value = 100; // Forest/City hum
+            }
+
+            synthGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            synthGain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 2); // Smooth fade in
+            
+            synthOscillator.connect(synthGain);
+            synthGain.connect(audioCtx.destination);
+            synthOscillator.start();
+
+            // 2. Play AI Voiceover for Data Lyrics (Text to Speech)
+            window.speechSynthesis.cancel(); // Stop any ongoing speech
+            const textToSpeak = db[currentTrack][currentLang].lyrics.replace(/"/g, ''); // Clean quotes
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            
+            // Set language code correctly
+            if(currentLang === 'hi') utterance.lang = 'hi-IN';
+            else if(currentLang === 'mr') utterance.lang = 'mr-IN';
+            else utterance.lang = 'en-US';
+
+            utterance.rate = 0.9;
+            utterance.pitch = 1.1; // Slightly futuristic pitch
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function stopAudio() {
+            // Stop Voice
+            window.speechSynthesis.cancel();
+            
+            // Stop Synth smoothly
+            if(synthGain && audioCtx) {
+                synthGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+                setTimeout(() => {
+                    if(synthOscillator) {
+                        try {
+                            synthOscillator.stop();
+                            synthOscillator.disconnect();
+                        } catch(e) {}
+                        synthOscillator = null;
+                    }
+                }, 300);
+            }
+            setPlayState(false);
+        }
+
+        function updateUI() {
+            const data = db[currentTrack][currentLang];
+            document.getElementById('uiTitle').innerText = data.title;
+            document.getElementById('uiLyrics').innerText = data.lyrics;
+            document.getElementById('uiIcon').innerText = db[currentTrack].icon;
+            
+            if(!isPlaying) {
+                document.getElementById('uiVisualText').innerText = "PRESS PLAY TO START VISUALS & AUDIO";
+            } else {
+                document.getElementById('uiVisualText').innerText = `[ PLAYING ${currentTrack.toUpperCase()} SOUNDSCAPE & VISUALS ]`;
+            }
+        }
+
+        function changeTrack(trackId, btnElem) {
+            stopAudio();
+            currentTrack = trackId;
+
+            // Reset sidebar highlights
+            document.querySelectorAll('.track-btn').forEach(btn => {
+                btn.classList.remove('active-track', 'active-local');
+            });
+            
+            // Apply proper highlight
+            if(trackId === 'nagpur') {
+                btnElem.classList.add('active-local');
+            } else {
+                btnElem.classList.add('active-track');
+            }
+
+            updateUI();
+        }
+
+        function changeLang(langId, btnElem) {
+            currentLang = langId;
+
+            // Reset language button highlights
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('bg-gray-800', 'text-white');
+                btn.classList.add('text-gray-400');
+            });
+            
+            btnElem.classList.add('bg-gray-800', 'text-white');
+            btnElem.classList.remove('text-gray-400');
+
+            updateUI();
+        }
+
+        // Initialize UI on load
+        updateUI();
+    </script>
+</body>
+</html>
